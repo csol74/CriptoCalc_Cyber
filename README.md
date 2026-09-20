@@ -1,71 +1,67 @@
-# CriptoCalc — Calculadora de Matemática Modular y Criptografía (Streamlit)
+# CriptoCalc — interfaz neumórfica en Streamlit
 
-Calculadora con 6 menús: operaciones de matemática modular, criptografía
-clásica, criptografía moderna, algoritmos hash, codificación y generación de
-hashes con SALT.
+Este proyecto usa el **mismo `calculadora.html`** del artefacto original
+(HTML + CSS + JS autocontenido, con el diseño neumórfico, animaciones y las
+6 categorías/submenús). `app.py` no reconstruye nada con widgets de
+Streamlit: simplemente incrusta ese HTML completo dentro de la página con
+`st.components.v1.html(...)`, así que se ve y funciona idéntico al artefacto
+original, sin importar el tema claro/oscuro de Streamlit Cloud.
 
 ## Estructura del proyecto
 
 ```
-streamlit_app/
-├── app.py                  # Interfaz Streamlit (los 6 menús y submenús)
-├── crypto_utils.py         # Toda la lógica de cálculo (matemática pura, sin dependencias externas)
-├── requirements.txt        # Dependencias del proyecto
-├── .streamlit/
-│   └── config.toml         # Tema visual (colores claros consistentes en toda la app)
-└── README.md
+criptocalc-visual/
+├── app.py             # Incrusta calculadora.html dentro de Streamlit
+├── calculadora.html   # La interfaz neumórfica (HTML+CSS+JS)
+└── requirements.txt   # Dependencias
 ```
 
-> **Importante:** la carpeta `.streamlit/` (con el punto al inicio) debe subirse
-> tal cual a GitHub. Sin `config.toml`, Streamlit Cloud usa su tema oscuro por
-> defecto y el texto/los widgets pierden contraste con los colores que fija el
-> propio `app.py`. Algunos clientes de Git ocultan carpetas que empiezan con
-> punto — revisa que quedó incluida en el commit (`git status` debe mostrarla).
+> **Importante:** `app.py` y `calculadora.html` deben estar **en la misma
+> carpeta**. `app.py` busca `calculadora.html` junto a sí mismo; si no lo
+> encuentra, la app muestra un mensaje de error en vez de la calculadora.
 
 ## Versión de Python y dependencias
 
-- **Python recomendado: 3.11** (funciona igual en 3.10, 3.12 y 3.13; usa solo
-  la librería estándar — `hashlib`, `base64`, `secrets`, `string`,
-  `unicodedata` — más Streamlit).
-- **Streamlit:** se fija una versión mínima `streamlit>=1.50` en
-  `requirements.txt` (la última estable en PyPI a la fecha ronda la serie
-  1.5x–1.6x). No hace falta instalar nada más: la lógica criptográfica no usa
-  librerías de terceros (ni `pycryptodome` ni `cryptography`), así el
-  despliegue es rápido y no depende de compilar nada.
+- Python recomendado: **3.11** (funciona igual en 3.10–3.13).
+- Única dependencia: `streamlit>=1.50` (ver `requirements.txt`). El HTML
+  incrustado carga por su cuenta la librería `crypto-js` desde un CDN
+  (`cdnjs.cloudflare.com`) para los hashes MD5/SHA-256/SHA-512, así que no
+  hace falta instalar nada de criptografía en Python.
 
-## Ejecutar en local
+## 1. Ejecutar en local
 
 ```bash
-# 1. Clona tu repo
+# Clona tu repo
 git clone https://github.com/<tu-usuario>/<tu-repo>.git
 cd <tu-repo>
 
-# 2. Crea un entorno virtual (recomendado)
+# Entorno virtual (recomendado)
 python3.11 -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 
-# 3. Instala dependencias
+# Instala la única dependencia
 pip install -r requirements.txt
 
-# 4. Ejecuta la app
+# Ejecuta la app
 streamlit run app.py
 ```
 
-Se abrirá en `http://localhost:8501`.
+Se abrirá en `http://localhost:8501` mostrando la calculadora completa.
 
-## Desplegar en Streamlit Community Cloud
+## 2. Subir a GitHub
 
-1. Sube este proyecto a un repositorio de GitHub (público o privado; con
-   privado necesitas conectar tu cuenta de GitHub a Streamlit).
-2. Entra a **https://share.streamlit.io** e inicia sesión con GitHub.
-3. Clic en **"New app"** → selecciona el repositorio, la rama, y como
-   **Main file path** escribe `app.py` (ajusta la ruta si dejas la carpeta
-   `streamlit_app/` dentro del repo, ej. `streamlit_app/app.py`).
-4. En **"Advanced settings"**, antes de desplegar, puedes elegir la versión
-   de Python desde el selector de la interfaz (Streamlit Community Cloud
-   **ya no usa un archivo `runtime.txt`** para fijar la versión; ese archivo
-   es ignorado). Elige **Python 3.11** si el selector está disponible; si no
-   aparece, no te preocupes — el proyecto no usa nada específico de versión
-   y corre igual en 3.9–3.13.
-5. Clic en **"Deploy"**. En 1–2 minutos tendrás una URL pública tipo
-   `https://<algo>.streamlit.app`.
+Sube **los tres archivos** (`app.py`, `calculadora.html`, `requirements.txt`)
+al repositorio, manteniéndolos en la misma carpeta (puede ser la raíz del
+repo o una subcarpeta, mientras los tres queden juntos).
+
+## 3. Desplegar en Streamlit Community Cloud
+
+1. Entra a **https://share.streamlit.io** e inicia sesión con GitHub.
+2. Clic en **"New app"** → selecciona el repositorio y la rama.
+3. En **"Main file path"** escribe `app.py` (o `carpeta/app.py` si lo
+   dejaste dentro de una subcarpeta).
+4. Clic en **"Deploy"**. En 1–2 minutos tendrás una URL pública tipo
+   `https://<algo>.streamlit.app` con la calculadora funcionando igual que
+   el artefacto original.
+
+Cada `git push` posterior a ese repo redespliega la app automáticamente.
