@@ -1,4 +1,4 @@
-# CriptoCalc: Calculadora de Matemática Modular y Criptografía (Streamlit)
+# CriptoCalc — Calculadora de Matemática Modular y Criptografía (Streamlit)
 
 Calculadora con 6 menús: operaciones de matemática modular, criptografía
 clásica, criptografía moderna, algoritmos hash, codificación y generación de
@@ -8,11 +8,19 @@ hashes con SALT.
 
 ```
 streamlit_app/
-├── app.py             # Interfaz Streamlit (los 6 menús y submenús)
-├── crypto_utils.py    # Toda la lógica de cálculo (matemática pura, sin dependencias externas)
-├── requirements.txt   # Dependencias del proyecto
+├── app.py                  # Interfaz Streamlit (los 6 menús y submenús)
+├── crypto_utils.py         # Toda la lógica de cálculo (matemática pura, sin dependencias externas)
+├── requirements.txt        # Dependencias del proyecto
+├── .streamlit/
+│   └── config.toml         # Tema visual (colores claros consistentes en toda la app)
 └── README.md
 ```
+
+> **Importante:** la carpeta `.streamlit/` (con el punto al inicio) debe subirse
+> tal cual a GitHub. Sin `config.toml`, Streamlit Cloud usa su tema oscuro por
+> defecto y el texto/los widgets pierden contraste con los colores que fija el
+> propio `app.py`. Algunos clientes de Git ocultan carpetas que empiezan con
+> punto — revisa que quedó incluida en el commit (`git status` debe mostrarla).
 
 ## Versión de Python y dependencias
 
@@ -61,9 +69,3 @@ Se abrirá en `http://localhost:8501`.
    y corre igual en 3.9–3.13.
 5. Clic en **"Deploy"**. En 1–2 minutos tendrás una URL pública tipo
    `https://<algo>.streamlit.app`.
-
-  automáticamente** (útil para mostrar en el video que el flujo GitHub →
-  Streamlit está conectado).
-- Puedes mostrar los logs de build en el panel de Streamlit Cloud
-  ("Manage app" → "Logs") como evidencia de qué versión de Python y de
-  Streamlit se usó realmente en el despliegue.
