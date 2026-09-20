@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CriptoCalc — Calculadora de Criptografía y Matemática Modular</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<style>
+:root{
+  --bg:#E0E5EC;
+  --surface:#E0E5EC;
+  --text:#33404e;
+  --text-dim:#7a8699;
+  --light:#ffffff;
+  --dark:#a3b1c6;
+  --accent:#e8734a;
+  --accent-text:#fff8f4;
+  --mint:#3fb88f;
+  --radius:28px;
+  --radius-sm:16px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root:not([data-theme="light"]){
+  @media (prefers-color-scheme: dark){
+    --bg:#1E222D;
+    --surface:#1E222D;
+    --text:#dfe6f0;
+    --text-dim:#8a93a6;
+    --light:#2b303e;
+    --dark:#121620;
+    --accent:#ff8a5c;
+    --accent-text:#1a0f08;
+    --mint:#4fd6a8;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1E222D;
+  --surface:#1E222D;
+  --text:#dfe6f0;
+  --text-dim:#8a93a6;
+  --light:#2b303e;
+  --dark:#121620;
+  --accent:#ff8a5c;
+  --accent-text:#1a0f08;
+  --mint:#4fd6a8;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:32px 16px 64px;
+  min-height:100%;
+}
+.shell{width:100%;max-width:760px;}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+  padding:0 6px;
+}
+.brand{font-size:15px;letter-spacing:.02em;color:var(--text-dim);}
+.brand b{color:var(--text);font-weight:700;}
+.theme-toggle{
+  width:44px;height:44px;border-radius:14px;border:none;cursor:pointer;
+  background:var(--surface);
+  box-shadow: 6px 6px 12px var(--dark), -6px -6px 12px var(--light);
+  color:var(--text);font-size:17px;
+  transition: all .15s ease-out;
+}
+.theme-toggle:active{
+  box-shadow: inset 4px 4px 8px var(--dark), inset -4px -4px 8px var(--light);
+  transform:scale(0.96);
+}
+
+.calculator{
+  background:var(--surface);
+  border-radius:var(--radius);
+  padding:22px;
+  box-shadow: 16px 16px 32px var(--dark), -16px -16px 32px var(--light);
+}
+
+.screen{
+  border-radius:20px;
+  padding:20px 22px;
+  margin-bottom:20px;
+  background:var(--surface);
+  box-shadow: inset 8px 8px 16px var(--dark), inset -8px -8px 16px var(--light);
+  position:relative;
+  overflow:hidden;
+  min-height:112px;
+}
+.screen::after{
+  content:"";
+  position:absolute;
+  top:-40%; left:-20%;
+  width:70%; height:180%;
+  background:linear-gradient(120deg, rgba(255,255,255,.16), rgba(255,255,255,0) 60%);
+  transform:rotate(18deg);
+  pointer-events:none;
+  animation: glare 6s ease-in-out infinite;
+}
+@keyframes glare{
+  0%,100%{ transform:translateX(0) rotate(18deg); opacity:.5; }
+  50%{ transform:translateX(40px) rotate(18deg); opacity:.9; }
+}
+.screen-label{
+  font-size:11px;
+  color:var(--text-dim);
+  font-weight:600;
+  letter-spacing:.04em;
+  margin-bottom:6px;
+}
+.screen-op{
+  font-size:13px;
+  color:var(--accent);
+  font-weight:600;
+  min-height:16px;
+  margin-bottom:4px;
+}
+.screen-main{
+  font-size:15px;
+  line-height:1.5;
+  font-variant-numeric:tabular-nums;
+  word-break:break-word;
+  min-height:24px;
+  transition:opacity .25s ease, transform .25s ease;
+}
+.screen-main.fade{opacity:0; transform:translateY(4px);}
+.screen-steps{
+  margin-top:10px;
+  font-size:12.5px;
+  color:var(--text-dim);
+  line-height:1.6;
+  max-height:220px;
+  overflow-y:auto;
+  white-space:pre-wrap;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.screen-steps table{border-collapse:collapse;width:100%;margin-top:4px;}
+.screen-steps th,.screen-steps td{
+  border-bottom:1px solid var(--dark);
+  padding:4px 8px;
+  text-align:center;
+  font-size:12px;
+}
+.screen-steps th{color:var(--text);}
+
+.menu-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-bottom:14px;
+}
+.pad-btn{
+  border:none;
+  cursor:pointer;
+  border-radius:16px;
+  background:var(--surface);
+  color:var(--text);
+  font-family:inherit;
+  font-weight:600;
+  font-size:13px;
+  padding:14px 8px;
+  box-shadow: 6px 6px 12px var(--dark), -6px -6px 12px var(--light);
+  transition: transform .16s ease-out, box-shadow .16s ease-out;
+  line-height:1.3;
+}
+.pad-btn:hover{transform:translateY(-1px);}
+.pad-btn:active,.pad-btn.active{
+  box-shadow: inset 5px 5px 10px var(--dark), inset -5px -5px 10px var(--light);
+  transform:scale(0.96);
+}
+.pad-btn.accent{
+  background:linear-gradient(145deg, var(--accent), color-mix(in srgb, var(--accent) 80%, black));
+  color:var(--accent-text);
+  box-shadow: 6px 6px 14px color-mix(in srgb, var(--accent) 45%, transparent), -6px -6px 14px var(--light);
+}
+.pad-btn.accent:active{
+  box-shadow: inset 5px 5px 10px color-mix(in srgb, var(--accent) 55%, black), inset -5px -5px 10px color-mix(in srgb, var(--accent) 20%, white);
+}
+.pad-btn.mint{
+  background:linear-gradient(145deg, var(--mint), color-mix(in srgb, var(--mint) 78%, black));
+  color:#fff;
+}
+.pad-btn small{display:block;font-weight:500;color:inherit;opacity:.75;font-size:10.5px;margin-top:2px;}
+
+.submenu-title{
+  font-size:12px;
+  font-weight:700;
+  color:var(--text-dim);
+  margin:4px 2px 10px;
+}
+.submenu-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-bottom:16px;
+}
+.submenu-grid .pad-btn{font-size:12.5px;padding:12px 8px;}
+
+.workspace{
+  border-radius:20px;
+  padding:16px;
+  background:var(--surface);
+  box-shadow: inset 6px 6px 12px var(--dark), inset -6px -6px 12px var(--light);
+}
+.field{margin-bottom:12px;}
+.field label{
+  display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;
+}
+.field input, .field select{
+  width:100%;
+  border:none;
+  border-radius:12px;
+  padding:11px 14px;
+  font-family:inherit;
+  font-size:14px;
+  color:var(--text);
+  background:var(--surface);
+  box-shadow: inset 4px 4px 8px var(--dark), inset -4px -4px 8px var(--light);
+  outline:none;
+}
+.field input:focus, .field select:focus{
+  box-shadow: inset 4px 4px 8px var(--dark), inset -4px -4px 8px var(--light), 0 0 0 2px var(--accent);
+}
+.actions{display:flex;gap:10px;margin-top:6px;}
+.actions .pad-btn{flex:1;padding:13px;font-size:13px;}
+.hint{font-size:11.5px;color:var(--text-dim);margin-top:-4px;margin-bottom:10px;line-height:1.5;}
+.back-row{margin-bottom:14px;}
+.back-row .pad-btn{width:auto;padding:10px 16px;font-size:12px;}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-thumb{background:var(--dark);border-radius:4px;}
+@media (max-width:480px){
+  .menu-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="top">
+    <div class="brand">CriptoCalc <b>· Seguridad &amp; Matemática Modular</b></div>
+    <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌓</button>
+  </div>
+
+  <div class="calculator">
+    <div class="screen">
+      <div class="screen-label" id="screenLabel">Selecciona un menú</div>
+      <div class="screen-op" id="screenOp"></div>
+      <div class="screen-main" id="screenMain">Elige una de las 6 categorías para comenzar.</div>
+      <div class="screen-steps" id="screenSteps"></div>
+    </div>
+
+    <div id="backRow" class="back-row" style="display:none;">
+      <button class="pad-btn" id="backBtn">← Volver al menú</button>
+    </div>
+
+    <div id="mainMenu" class="menu-grid"></div>
+    <div id="submenuArea"></div>
+    <div id="workspaceArea"></div>
+  </div>
+</div>
+
+<script>
+/* ============ THEME ============ */
+const root = document.documentElement;
+document.getElementById('themeToggle').onclick = ()=>{
+  const cur = root.getAttribute('data-theme');
+  root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+};
+
+/* ============ MATH HELPERS ============ */
+const mod = (a,n) => ((a % n) + n) % n;
+
+function gcdSteps(a,b){
+  let steps = [];
+  let A = a, B = b;
+  while (B !== 0){
+    const q = Math.floor(A/B), r = A - q*B;
+    steps.push(`${A} = ${q}·${B} + ${r}`);
+    A = B; B = r;
+  }
+  return {gcd:A, steps};
+}
+
+// Extended Euclidean Algorithm, returns gcd, x, y such that a*x+b*y=gcd, plus round table
+function extendedEuclid(a,n){
+  let old_r=a, r=n, old_s=1, s=0, old_t=0, t=1;
+  const rows=[];
+  let round=0;
+  while (r !== 0){
+    const q = Math.floor(old_r/r);
+    rows.push({round:++round, q, r_prev:old_r, r_cur:r, rem:old_r-q*r, s:old_s, t:old_t});
+    [old_r, r] = [r, old_r - q*r];
+    [old_s, s] = [s, old_s - q*s];
+    [old_t, t] = [t, old_t - q*t];
+  }
+  return {gcd:old_r, x:old_s, y:old_t, rows};
+}
+
+function fastPowSteps(base, exp, m){
+  base = BigInt(base); exp = BigInt(exp); m = BigInt(m);
+  const bin = exp.toString(2);
+  let result = 1n, b = base % m;
+  const rows = [];
+  let e = exp;
+  let result2 = 1n;
+  const bits = bin.split('').map(Number);
+  let acc = 1n;
+  for (const bit of bits){
+    const before = acc;
+    acc = (acc*acc) % m;
+    const sq = acc;
+    if (bit === 1){ acc = (acc*base) % m; }
+    rows.push({bit, sq:sq.toString(), afterMul:acc.toString()});
+  }
+  return {result:acc.toString(), bin, rows};
+}
+
+/* ============ TEXT HELPERS ============ */
+const A27 = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+const A26 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+function stripAccents(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function onlyLetters(s, alphabet){
+  s = s.toUpperCase();
+  if (alphabet === A26) s = stripAccents(s).replace(/Ñ/g,'N');
+  return s.split('').filter(c=>alphabet.includes(c)).join('');
+}
+
+function shiftCipher(text, key, alphabet, decrypt){
+  const clean = onlyLetters(text, alphabet);
+  const n = alphabet.length;
+  const k = decrypt ? mod(-key, n) : mod(key, n);
+  let out = '';
+  for (const ch of clean){
+    const i = alphabet.indexOf(ch);
+    out += alphabet[mod(i+k, n)];
+  }
+  return {clean, out};
+}
+
+function atbash(text){
+  const clean = onlyLetters(text, A26);
+  let out = '';
+  for (const ch of clean){
+    const i = A26.indexOf(ch);
+    out += A26[25-i];
+  }
+  return {clean, out};
+}
+
+function affine(text, a, b, alphabet, decrypt){
+  const clean = onlyLetters(text, alphabet);
+  const n = alphabet.length;
+  const g = gcdSteps(a,n).gcd;
+  if (g !== 1) throw new Error(`gcd(${a},${n}) = ${g} ≠ 1 → 'a' no tiene inverso, elige otro valor.`);
+  let out = '';
+  if (!decrypt){
+    for (const ch of clean){
+      const x = alphabet.indexOf(ch);
+      out += alphabet[mod(a*x+b, n)];
+    }
+  } else {
+    const aInv = extendedEuclid(a,n).x;
+    const aInvMod = mod(aInv, n);
+    for (const ch of clean){
+      const y = alphabet.indexOf(ch);
+      out += alphabet[mod(aInvMod*(y-b), n)];
+    }
+  }
+  return {clean, out};
+}
+
+function buildSubstitutionAlphabet(keyword){
+  keyword = onlyLetters(keyword, A26);
+  let seen = new Set(); let seq = '';
+  for (const c of keyword){ if(!seen.has(c)){ seen.add(c); seq += c; } }
+  for (const c of A26){ if(!seen.has(c)){ seen.add(c); seq += c; } }
+  return seq;
+}
+function substitution(text, keyword, decrypt){
+  const cipherAlpha = buildSubstitutionAlphabet(keyword);
+  const clean = onlyLetters(text, A26);
+  let out = '';
+  if (!decrypt){
+    for (const ch of clean) out += cipherAlpha[A26.indexOf(ch)];
+  } else {
+    for (const ch of clean) out += A26[cipherAlpha.indexOf(ch)];
+  }
+  return {clean, out, cipherAlpha};
+}
+
+function vernam(text, key, decrypt){
+  if (!decrypt){
+    let out = [];
+    for (let i=0;i<text.length;i++){
+      const c = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+      out.push(c.toString(16).padStart(2,'0'));
+    }
+    return out.join(' ');
+  } else {
+    const bytes = text.trim().split(/\s+/).map(h=>parseInt(h,16));
+    let out = '';
+    for (let i=0;i<bytes.length;i++){
+      out += String.fromCharCode(bytes[i] ^ key.charCodeAt(i % key.length));
+    }
+    return out;
+  }
+}
+
+function columnOrder(key){
+  if (/^\d+$/.test(key)){
+    return key.split('').map(Number);
+  }
+  const arr = key.toUpperCase().split('').map((c,i)=>({c,i}));
+  const sorted = [...arr].sort((x,y)=> x.c === y.c ? x.i-y.i : x.c.localeCompare(y.c));
+  const order = new Array(arr.length);
+  sorted.forEach((item, rank)=>{ order[item.i] = rank+1; });
+  return order;
+}
+function columnarEncrypt(text, key){
+  const clean = onlyLetters(text, A26).replace(/\s+/g,'') || onlyLetters(text.toUpperCase().replace(/[^A-ZÑ ]/g,''), A26);
+  const cols = key.length;
+  const order = columnOrder(key);
+  const rows = Math.ceil(clean.length/cols) || 1;
+  const padded = clean.padEnd(rows*cols, 'X');
+  const grid = [];
+  for (let r=0;r<rows;r++) grid.push(padded.slice(r*cols,(r+1)*cols).split(''));
+  let out = '';
+  for (let rank=1; rank<=cols; rank++){
+    const colIdx = order.indexOf(rank);
+    for (let r=0;r<rows;r++) out += grid[r][colIdx];
+  }
+  return {clean:padded, out, order, rows, cols};
+}
+function columnarDecrypt(cipher, key){
+  const cols = key.length;
+  const order = columnOrder(key);
+  const rows = Math.ceil(cipher.length/cols);
+  const grid = Array.from({length:rows}, ()=> new Array(cols));
+  let idx = 0;
+  for (let rank=1; rank<=cols; rank++){
+    const colIdx = order.indexOf(rank);
+    for (let r=0;r<rows;r++){ grid[r][colIdx] = cipher[idx++]; }
+  }
+  let out = '';
+  for (let r=0;r<rows;r++) out += grid[r].join('');
+  return {out, order, rows, cols};
+}
+
+/* ============ ENCODING ============ */
+function toBinaryStr(text){
+  return Array.from(new TextEncoder().encode(text)).map(b=>b.toString(2).padStart(8,'0')).join(' ');
+}
+function fromBinaryStr(bin){
+  const bytes = bin.trim().split(/\s+/).map(b=>parseInt(b,2));
+  return new TextDecoder().decode(new Uint8Array(bytes));
+}
+function toHexStr(text){
+  return Array.from(new TextEncoder().encode(text)).map(b=>b.toString(16).padStart(2,'0')).join(' ');
+}
+function fromHexStr(hex){
+  const bytes = hex.trim().split(/\s+/).map(h=>parseInt(h,16));
+  return new TextDecoder().decode(new Uint8Array(bytes));
+}
+function toAsciiStr(text){
+  return Array.from(text).map(c=>c.codePointAt(0)).join(' ');
+}
+function fromAsciiStr(codes){
+  return codes.trim().split(/\s+/).map(n=>String.fromCodePoint(parseInt(n,10))).join('');
+}
+function toB64(text){
+  return btoa(String.fromCharCode(...new TextEncoder().encode(text)));
+}
+function fromB64(b64){
+  const bin = atob(b64.trim());
+  const bytes = Uint8Array.from(bin, c=>c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+/* ============ MENU DEFINITION ============ */
+const MENUS = [
+  { id:1, name:"Matemática Modular", short:"Módulo · MCD · Inversos", cls:"", subs:[
+    { id:"1.1", name:"a mod n = b", fields:[
+        {id:'a',label:'a',type:'number'},{id:'n',label:'n',type:'number'}],
+      hint:"Calcula el residuo de a al dividir entre n.",
+      run:v=>{ const b = mod(Number(v.a), Number(v.n));
+        return {main:`${v.a} mod ${v.n} = ${b}`, steps:`b = a − n·⌊a/n⌋ = ${v.a} − ${v.n}·${Math.floor(v.a/v.n)} = ${b}`}; } },
+    { id:"1.2", name:"Inverso aditivo", fields:[
+        {id:'a',label:'a',type:'number'},{id:'n',label:'n (módulo)',type:'number'}],
+      hint:"Calcula −a mod n, el valor que sumado a 'a' da 0 mod n.",
+      run:v=>{ const a=Number(v.a), n=Number(v.n); const inv = mod(-a, n);
+        return {main:`Inverso aditivo de ${a} mod ${n} = ${inv}`, steps:`(${a} + ${inv}) mod ${n} = ${mod(a+inv,n)} ✔`}; } },
+    { id:"1.3", name:"Inverso XOR", fields:[
+        {id:'a',label:'Valor a (decimal)',type:'number'},{id:'c',label:'Resultado c = a ⊕ b (decimal)',type:'number'}],
+      hint:"XOR es su propio inverso: si c = a ⊕ b, entonces b = a ⊕ c.",
+      run:v=>{ const a=Number(v.a), c=Number(v.c); const b=a^c;
+        return {main:`b = a ⊕ c = ${a} ⊕ ${c} = ${b}`, steps:`Binario: ${a.toString(2)} ⊕ ${c.toString(2)} = ${b.toString(2)}\nComprobación: ${a} ⊕ ${b} = ${a^b} (debe ser ${c})`}; } },
+    { id:"1.4", name:"MCD e inverso multiplicativo", fields:[
+        {id:'a',label:'a',type:'number'},{id:'n',label:'n',type:'number'}],
+      hint:"Calcula el MCD(a,n) e indica si existe inverso multiplicativo.",
+      run:v=>{ const {gcd,steps}=gcdSteps(Number(v.a),Number(v.n));
+        const existe = gcd===1;
+        return {main:`MCD(${v.a}, ${v.n}) = ${gcd}\n${existe? '✔ Existe inverso multiplicativo (gcd = 1)':'✘ No existe inverso multiplicativo (gcd ≠ 1)'}`,
+          steps: steps.join('\n')}; } },
+    { id:"1.5", name:"Inverso multiplicativo (método tradicional)", fields:[
+        {id:'a',label:'a',type:'number'},{id:'n',label:'n (módulo)',type:'number'}],
+      hint:"Prueba x = 1..n−1 hasta hallar a·x ≡ 1 (mod n).",
+      run:v=>{ const a=Number(v.a), n=Number(v.n);
+        let rows=['x | a·x mod n']; let found=null;
+        for (let x=1;x<n;x++){ const r=mod(a*x,n); rows.push(`${x} | ${r}`); if(r===1 && found===null) found=x; }
+        return {main: found!==null? `Inverso multiplicativo de ${a} mod ${n} = ${found}` : `No existe inverso multiplicativo de ${a} mod ${n} (gcd ≠ 1)`,
+          steps: rows.join('\n')}; } },
+    { id:"1.6", name:"Inverso multiplicativo (AEE)", fields:[
+        {id:'a',label:'a',type:'number'},{id:'n',label:'n (módulo)',type:'number'}],
+      hint:"Algoritmo Extendido de Euclides, con tabla de rondas.",
+      run:v=>{ const a=Number(v.a), n=Number(v.n); const res = extendedEuclid(a,n);
+        let table = 'Ronda | q | r_ant | r_act | resto | s | t\n';
+        res.rows.forEach(row=>{ table += `${row.round} | ${row.q} | ${row.r_prev} | ${row.r_cur} | ${row.rem} | ${row.s} | ${row.t}\n`; });
+        const invExists = res.gcd===1;
+        const invVal = invExists? mod(res.x, n) : null;
+        return {main: `MCD(${a},${n}) = ${res.gcd}\n` + (invExists? `Inverso multiplicativo de ${a} mod ${n} = ${invVal}\n(rondas: ${res.rows.length})` : 'No existe inverso multiplicativo (gcd ≠ 1)'),
+          steps: table}; } },
+  ]},
+  { id:2, name:"Criptografía Clásica", short:"César · Vernam · Atbash…", subs:[
+    { id:"2.1", name:"Cifrado módulo 27", fields:[
+        {id:'text',label:'Texto',type:'text'},{id:'key',label:'Clave (0-26)',type:'number'},
+        {id:'mode',label:'Modo',type:'select',options:['Cifrar','Descifrar']}],
+      hint:"Alfabeto español de 27 letras (incluye Ñ).",
+      run:v=>{ const dec = v.mode==='Descifrar'; const r = shiftCipher(v.text, Number(v.key), A27, dec);
+        return {main:`Texto limpio: ${r.clean}\nResultado: ${r.out}`, steps:`Alfabeto (27): ${A27}\nDesplazamiento: k=${v.key}`}; } },
+    { id:"2.2", name:"Cifrado César", fields:[
+        {id:'text',label:'Texto',type:'text'},{id:'key',label:'Clave (0-25)',type:'number'},
+        {id:'mode',label:'Modo',type:'select',options:['Cifrar','Descifrar']}],
+      hint:"Desplazamiento simple mod 26.",
+      run:v=>{ const dec = v.mode==='Descifrar'; const r = shiftCipher(v.text, Number(v.key), A26, dec);
+        return {main:`Texto limpio: ${r.clean}\nResultado: ${r.out}`, steps:`Alfabeto (26): ${A26}\nDesplazamiento: k=${v.key}`}; } },
+    { id:"2.3", name:"Cifrado Vernam", fields:[
+        {id:'text',label:'Texto (o hex si descifras)',type:'text'},{id:'key',label:'Clave (texto)',type:'text'},
+        {id:'mode',label:'Modo',type:'select',options:['Cifrar','Descifrar']}],
+      hint:"XOR entre texto y clave repetida. Cifrado se muestra en hexadecimal.",
+      run:v=>{ const dec = v.mode==='Descifrar'; const out = vernam(v.text, v.key, dec);
+        return {main:`Resultado: ${out}`, steps:`Clave repetida byte a byte con XOR (⊕).`}; } },
+    { id:"2.4", name:"Cifrado ATBASH", fields:[{id:'text',label:'Texto',type:'text'}],
+      hint:"Sustitución fija: A↔Z, B↔Y, … (simétrico).",
+      run:v=>{ const r = atbash(v.text);
+        return {main:`Texto limpio: ${r.clean}\nResultado: ${r.out}`, steps:`ATBASH: letra_i ↔ letra_(25−i)`}; } },
+    { id:"2.5", name:"Transposición columnar simple", fields:[
+        {id:'text',label:'Texto',type:'text'},{id:'key',label:'Clave (palabra o dígitos, ej: 3142)',type:'text'},
+        {id:'mode',label:'Modo',type:'select',options:['Cifrar','Descifrar']}],
+      hint:"El orden de columnas se deriva alfabéticamente de la clave (o se usan los dígitos directamente).",
+      run:v=>{ if (v.mode==='Cifrar'){ const r = columnarEncrypt(v.text, v.key);
+          return {main:`Texto (relleno con X): ${r.clean}\nResultado: ${r.out}`, steps:`Columnas: ${r.cols} · Filas: ${r.rows}\nOrden de lectura: [${r.order.join(', ')}]`}; }
+        else { const r = columnarDecrypt(onlyLetters(v.text, A26), v.key);
+          return {main:`Resultado: ${r.out}`, steps:`Columnas: ${r.cols} · Filas: ${r.rows}\nOrden de lectura: [${r.order.join(', ')}]`}; } } },
+    { id:"2.6", name:"Cifrado afín", fields:[
+        {id:'text',label:'Texto',type:'text'},{id:'a',label:'a',type:'number'},{id:'b',label:'b',type:'number'},
+        {id:'mode',label:'Modo',type:'select',options:['Cifrar','Descifrar']}],
+      hint:"E(x) = (a·x + b) mod 26 — a debe ser coprimo con 26.",
+      run:v=>{ const dec = v.mode==='Descifrar'; const r = affine(v.text, Number(v.a), Number(v.b), A26, dec);
+        return {main:`Texto limpio: ${r.clean}\nResultado: ${r.out}`, steps: dec? `D(y) = a⁻¹·(y − b) mod 26` : `E(x) = (${v.a}·x + ${v.b}) mod 26`}; } },
+    { id:"2.7", name:"Sustitución simple", fields:[
+        {id:'text',label:'Texto',type:'text'},{id:'key',label:'Clave (palabra)',type:'text'},
+        {id:'mode',label:'Modo',type:'select',options:['Cifrar','Descifrar']}],
+      hint:"Genera un alfabeto cifrado a partir de una palabra clave.",
+      run:v=>{ const dec = v.mode==='Descifrar'; const r = substitution(v.text, v.key, dec);
+        return {main:`Texto limpio: ${r.clean}\nResultado: ${r.out}`, steps:`Alfabeto claro:   ${A26}\nAlfabeto cifrado: ${r.cipherAlpha}`}; } },
+  ]},
+  { id:3, name:"Criptografía Moderna", short:"Diffie-Hellman · RSA", subs:[
+    { id:"3.1", name:"Diffie-Hellman", fields:[
+        {id:'p',label:'p (primo)',type:'number'},{id:'g',label:'g (generador)',type:'number'},
+        {id:'a',label:'a (privada de Alice)',type:'number'},{id:'b',label:'b (privada de Bob)',type:'number'}],
+      hint:"Calcula claves públicas y secreto compartido.",
+      run:v=>{ const p=v.p,g=v.g,a=v.a,b=v.b;
+        const A = fastPowSteps(g,a,p).result, B = fastPowSteps(g,b,p).result;
+        const sA = fastPowSteps(B,a,p).result, sB = fastPowSteps(A,b,p).result;
+        return {main:`Clave pública Alice A = g^a mod p = ${A}\nClave pública Bob   B = g^b mod p = ${B}\nSecreto (Alice) = B^a mod p = ${sA}\nSecreto (Bob)   = A^b mod p = ${sB}\n${sA===sB? '✔ Los secretos coinciden':'✘ No coinciden (revisa los datos)'}`,
+          steps:`p=${p}, g=${g}, a=${a}, b=${b}`}; } },
+    { id:"3.2", name:"RSA", fields:[
+        {id:'p',label:'p (primo)',type:'number'},{id:'q',label:'q (primo)',type:'number'},
+        {id:'e',label:'e (exponente público)',type:'number'},{id:'m',label:'Mensaje m (número < n)',type:'number'}],
+      hint:"Genera n, φ(n), d, y cifra/descifra el mensaje numérico m.",
+      run:v=>{ const p=Number(v.p), q=Number(v.q), e=Number(v.e), m=Number(v.m);
+        const n = p*q, phi=(p-1)*(q-1);
+        const ext = extendedEuclid(e, phi);
+        if (ext.gcd !== 1) return {main:`e=${e} no es coprimo con φ(n)=${phi}. Elige otro e.`, steps:''};
+        const d = mod(ext.x, phi);
+        const c = fastPowSteps(m,e,n).result;
+        const back = fastPowSteps(c,d,n).result;
+        return {main:`n = p·q = ${n}\nφ(n) = (p−1)(q−1) = ${phi}\nd = e⁻¹ mod φ(n) = ${d}\nCifrado: c = m^e mod n = ${c}\nDescifrado: m = c^d mod n = ${back}`,
+          steps:`Clave pública: (n=${n}, e=${e})\nClave privada: (n=${n}, d=${d})`}; } },
+    { id:"3.3", name:"Exponenciación rápida", fields:[
+        {id:'base',label:'Base',type:'number'},{id:'exp',label:'Exponente',type:'number'},{id:'m',label:'Módulo',type:'number'}],
+      hint:"Cuadrado y multiplicación (square-and-multiply) usando la expansión binaria del exponente.",
+      run:v=>{ const r = fastPowSteps(v.base,v.exp,v.m);
+        let table = 'bit | cuadrado | ×base si bit=1\n';
+        r.rows.forEach(row=>{ table += `${row.bit} | ${row.sq} | ${row.afterMul}\n`; });
+        return {main:`${v.base}^${v.exp} mod ${v.m} = ${r.result}`, steps:`Exponente en binario: ${r.bin}\n\n${table}`}; } },
+  ]},
+  { id:4, name:"Algoritmos Hash", short:"MD5 · SHA-256 · SHA-512", subs:[
+    { id:"4.1", name:"MD5", fields:[{id:'text',label:'Texto',type:'text'}],
+      hint:"Calcula el hash MD5 (128 bits) del texto.",
+      run:v=>({main:`MD5: ${CryptoJS.MD5(v.text).toString()}`, steps:''}) },
+    { id:"4.2", name:"SHA-256", fields:[{id:'text',label:'Texto',type:'text'}],
+      hint:"Calcula el hash SHA-256 (256 bits) del texto.",
+      run:v=>({main:`SHA-256: ${CryptoJS.SHA256(v.text).toString()}`, steps:''}) },
+    { id:"4.3", name:"SHA-512", fields:[{id:'text',label:'Texto',type:'text'}],
+      hint:"Calcula el hash SHA-512 (512 bits) del texto.",
+      run:v=>({main:`SHA-512: ${CryptoJS.SHA512(v.text).toString()}`, steps:''}) },
+  ]},
+  { id:5, name:"Codificación", short:"ASCII · Hex · Binario · Base64", subs:[
+    { id:"5.1", name:"ASCII", fields:[{id:'text',label:'Texto / códigos',type:'text'},
+        {id:'mode',label:'Modo',type:'select',options:['Codificar','Decodificar']}],
+      hint:"Codificar: texto → códigos ASCII. Decodificar: códigos separados por espacio → texto.",
+      run:v=>({main: v.mode==='Codificar'? toAsciiStr(v.text) : fromAsciiStr(v.text), steps:''}) },
+    { id:"5.2", name:"Hexadecimal", fields:[{id:'text',label:'Texto / hex',type:'text'},
+        {id:'mode',label:'Modo',type:'select',options:['Codificar','Decodificar']}],
+      hint:"Codificar: texto → bytes en hex. Decodificar: hex separado por espacio → texto.",
+      run:v=>({main: v.mode==='Codificar'? toHexStr(v.text) : fromHexStr(v.text), steps:''}) },
+    { id:"5.3", name:"Binario", fields:[{id:'text',label:'Texto / binario',type:'text'},
+        {id:'mode',label:'Modo',type:'select',options:['Codificar','Decodificar']}],
+      hint:"Codificar: texto → bytes en binario. Decodificar: binario separado por espacio → texto.",
+      run:v=>({main: v.mode==='Codificar'? toBinaryStr(v.text) : fromBinaryStr(v.text), steps:''}) },
+    { id:"5.4", name:"Base64", fields:[{id:'text',label:'Texto / Base64',type:'text'},
+        {id:'mode',label:'Modo',type:'select',options:['Codificar','Decodificar']}],
+      hint:"Codificar: texto → Base64. Decodificar: Base64 → texto.",
+      run:v=>({main: v.mode==='Codificar'? toB64(v.text) : fromB64(v.text), steps:''}) },
+  ]},
+  { id:6, name:"Uso de SALT", short:"MD5 · SHA-256 · SHA-512 con salt", subs:[
+    { id:"6.1", name:"Hash con SALT — MD5", fields:[{id:'pass',label:'Contraseña',type:'text'}],
+      hint:"Genera 3 salts aleatorios distintos y su hash MD5(contraseña+salt).",
+      run:v=>saltRun(v.pass,'MD5') },
+    { id:"6.2", name:"Hash con SALT — SHA-256", fields:[{id:'pass',label:'Contraseña',type:'text'}],
+      hint:"Genera 3 salts aleatorios distintos y su hash SHA-256(contraseña+salt).",
+      run:v=>saltRun(v.pass,'SHA256') },
+    { id:"6.3", name:"Hash con SALT — SHA-512", fields:[{id:'pass',label:'Contraseña',type:'text'}],
+      hint:"Genera 3 salts aleatorios distintos y su hash SHA-512(contraseña+salt).",
+      run:v=>saltRun(v.pass,'SHA512') },
+  ]},
+];
+
+function randomSalt(len=8){
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let s='';
+  for (let i=0;i<len;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function saltRun(pass, algo){
+  const fn = algo==='MD5'? CryptoJS.MD5 : algo==='SHA256'? CryptoJS.SHA256 : CryptoJS.SHA512;
+  let lines = ['Salt | Hash(' + algo + ')'];
+  for (let i=0;i<3;i++){
+    const salt = randomSalt();
+    const hash = fn(pass+salt).toString();
+    lines.push(`${salt} | ${hash}`);
+  }
+  return {main:`Contraseña: "${pass}" — 3 hashes con salts distintos:`, steps: lines.join('\n')};
+}
+
+/* ============ UI RENDER ============ */
+const screenLabel = document.getElementById('screenLabel');
+const screenOp = document.getElementById('screenOp');
+const screenMain = document.getElementById('screenMain');
+const screenSteps = document.getElementById('screenSteps');
+const mainMenuEl = document.getElementById('mainMenu');
+const submenuArea = document.getElementById('submenuArea');
+const workspaceArea = document.getElementById('workspaceArea');
+const backRow = document.getElementById('backRow');
+const backBtn = document.getElementById('backBtn');
+
+function setScreen(label, op, main, steps){
+  screenLabel.textContent = label || '';
+  screenOp.textContent = op || '';
+  screenMain.classList.add('fade');
+  screenSteps.style.whiteSpace = 'pre-wrap';
+  setTimeout(()=>{
+    screenMain.textContent = main || '';
+    screenSteps.textContent = steps || '';
+    screenMain.classList.remove('fade');
+  }, 120);
+}
+
+function renderMainMenu(){
+  mainMenuEl.innerHTML = '';
+  MENUS.forEach(m=>{
+    const b = document.createElement('button');
+    b.className = 'pad-btn';
+    b.innerHTML = `${m.id}. ${m.name}<small>${m.short}</small>`;
+    b.onclick = ()=> openMenu(m);
+    mainMenuEl.appendChild(b);
+  });
+}
+
+function openMenu(menu){
+  mainMenuEl.style.display = 'none';
+  backRow.style.display = 'block';
+  setScreen(`Menú ${menu.id} · ${menu.name}`, '', 'Selecciona una operación del submenú.', '');
+  const title = document.createElement('div');
+  title.className = 'submenu-title';
+  title.textContent = `Submenú ${menu.id} — ${menu.name}`;
+  const grid = document.createElement('div');
+  grid.className = 'submenu-grid';
+  menu.subs.forEach(sub=>{
+    const b = document.createElement('button');
+    b.className = 'pad-btn mint';
+    b.textContent = `${sub.id}  ${sub.name}`;
+    b.onclick = ()=> openSub(menu, sub);
+    grid.appendChild(b);
+  });
+  submenuArea.innerHTML = '';
+  submenuArea.appendChild(title);
+  submenuArea.appendChild(grid);
+  workspaceArea.innerHTML = '';
+}
+
+function openSub(menu, sub){
+  setScreen(`${menu.id}. ${menu.name}`, `${sub.id} ${sub.name}`, sub.hint || '', '');
+  const ws = document.createElement('div');
+  ws.className = 'workspace';
+  if (sub.hint){
+    const h = document.createElement('div');
+    h.className = 'hint';
+    h.textContent = sub.hint;
+    ws.appendChild(h);
+  }
+  const inputs = {};
+  sub.fields.forEach(f=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'field';
+    const lab = document.createElement('label');
+    lab.textContent = f.label;
+    wrap.appendChild(lab);
+    let el;
+    if (f.type === 'select'){
+      el = document.createElement('select');
+      f.options.forEach(o=>{
+        const opt = document.createElement('option');
+        opt.value = o; opt.textContent = o;
+        el.appendChild(opt);
+      });
+    } else {
+      el = document.createElement('input');
+      el.type = f.type === 'number' ? 'number' : 'text';
+    }
+    el.id = 'f_'+f.id;
+    wrap.appendChild(el);
+    ws.appendChild(wrap);
+    inputs[f.id] = el;
+  });
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  const calcBtn = document.createElement('button');
+  calcBtn.className = 'pad-btn accent';
+  calcBtn.textContent = 'CALCULAR';
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'pad-btn';
+  clearBtn.textContent = 'LIMPIAR';
+  actions.appendChild(calcBtn);
+  actions.appendChild(clearBtn);
+  ws.appendChild(actions);
+
+  clearBtn.onclick = ()=>{
+    sub.fields.forEach(f=>{ inputs[f.id].value = f.type==='select'? f.options[0] : ''; });
+    setScreen(`${menu.id}. ${menu.name}`, `${sub.id} ${sub.name}`, sub.hint || '', '');
+  };
+  calcBtn.onclick = ()=>{
+    const values = {};
+    sub.fields.forEach(f=>{ values[f.id] = f.type==='number'? Number(inputs[f.id].value) : inputs[f.id].value; });
+    try{
+      const r = sub.run(values);
+      setScreen(`${menu.id}. ${menu.name}`, `${sub.id} ${sub.name}`, r.main, r.steps);
+    } catch(err){
+      setScreen(`${menu.id}. ${menu.name}`, `${sub.id} ${sub.name}`, `⚠ ${err.message}`, '');
+    }
+  };
+
+  workspaceArea.innerHTML = '';
+  workspaceArea.appendChild(ws);
+}
+
+backBtn.onclick = ()=>{
+  mainMenuEl.style.display = 'grid';
+  backRow.style.display = 'none';
+  submenuArea.innerHTML = '';
+  workspaceArea.innerHTML = '';
+  setScreen('Selecciona un menú', '', 'Elige una de las 6 categorías para comenzar.', '');
+};
+
+renderMainMenu();
+</script>
+</body>
+</html>
