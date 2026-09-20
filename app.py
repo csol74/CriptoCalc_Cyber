@@ -1,15 +1,4 @@
-```python
-"""
-app.py — CriptoCalc
-Aplicación de matemática modular, criptografía clásica y moderna,
-algoritmos hash, codificación y uso de SALT.
 
-Diseño:
-    Streamlit 1.50+
-
-Ejecutar:
-    streamlit run app.py
-"""
 
 import streamlit as st
 import crypto_utils as cu
@@ -1545,4 +1534,4 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-```
+
