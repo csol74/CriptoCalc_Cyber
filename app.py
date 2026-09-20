@@ -1,12 +1,3 @@
-"""
-app.py — CriptoCalc
-Calculadora de matemática modular, criptografía clásica y moderna,
-algoritmos hash, codificación y uso de SALT.
-
-Ejecutar localmente:
-    streamlit run app.py
-"""
-
 import streamlit as st
 import crypto_utils as cu
 
@@ -24,42 +15,25 @@ st.set_page_config(
 
 
 # ============================================================
-# DISEÑO VISUAL
+# ESTILOS
 # ============================================================
 
 st.markdown(
     """
     <style>
 
-    /* ========================================================
-       VARIABLES
-    ======================================================== */
-
     :root {
         --bg: #F4F7FB;
         --card: #FFFFFF;
-        --card-soft: #EEF3F9;
-
         --primary: #2563EB;
         --primary-dark: #1D4ED8;
-        --primary-light: #DBEAFE;
-
         --text: #172033;
         --muted: #64748B;
-
         --border: #DCE4EF;
-
         --dark: #111827;
-        --dark-soft: #1E293B;
-
-        --radius: 18px;
     }
 
-
-    /* ========================================================
-       FONDO GENERAL
-    ======================================================== */
-
+    /* Fondo general */
     .stApp {
         background:
             radial-gradient(
@@ -67,57 +41,38 @@ st.markdown(
                 rgba(37, 99, 235, 0.08),
                 transparent 28%
             ),
-            radial-gradient(
-                circle at 10% 90%,
-                rgba(59, 130, 246, 0.05),
-                transparent 25%
-            ),
             linear-gradient(
                 135deg,
                 #F4F7FB 0%,
                 #EEF3F9 100%
             );
-
         color: var(--text);
     }
 
-
-    /* ========================================================
-       CONTENEDOR
-    ======================================================== */
-
+    /* Contenedor principal */
     .block-container {
         max-width: 1180px;
-        padding-top: 2.2rem;
+        padding-top: 2rem;
         padding-bottom: 4rem;
     }
 
-
     /* ========================================================
        SIDEBAR
-    ======================================================== */
+       ======================================================== */
 
     section[data-testid="stSidebar"] {
         background: #111827;
         border-right: 1px solid rgba(255,255,255,0.06);
     }
 
-    section[data-testid="stSidebar"] > div {
-        padding-top: 1.7rem;
-    }
-
     section[data-testid="stSidebar"] * {
         color: #E5E7EB;
     }
-
-
-    /* Logo sidebar */
 
     .sidebar-logo {
         display: flex;
         align-items: center;
         gap: 12px;
-
         padding: 8px 8px 22px 8px;
         margin-bottom: 10px;
     }
@@ -125,21 +80,16 @@ st.markdown(
     .sidebar-logo-icon {
         width: 42px;
         height: 42px;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         border-radius: 13px;
-
         background: linear-gradient(
             145deg,
             #3B82F6,
             #1D4ED8
         );
-
         font-size: 20px;
-
         box-shadow:
             0 8px 18px rgba(37,99,235,0.30);
     }
@@ -152,64 +102,51 @@ st.markdown(
 
     .sidebar-logo-subtitle {
         font-size: 11px;
-        color: #94A3B8;
+        color: #94A3B8 !important;
         margin-top: 1px;
     }
 
-
-    /* Radio menu */
-
-    section[data-testid="stSidebar"] div[role="radiogroup"] {
+    section[data-testid="stSidebar"]
+    div[role="radiogroup"] {
         gap: 5px;
     }
 
-    section[data-testid="stSidebar"] div[role="radiogroup"] label {
+    section[data-testid="stSidebar"]
+    div[role="radiogroup"] label {
         border-radius: 11px;
         padding: 9px 11px;
-
-        transition:
-            background 0.18s ease,
-            transform 0.18s ease;
     }
 
-    section[data-testid="stSidebar"] div[role="radiogroup"] label:hover {
+    section[data-testid="stSidebar"]
+    div[role="radiogroup"] label:hover {
         background: rgba(255,255,255,0.07);
-        transform: translateX(2px);
     }
-
 
     /* ========================================================
        HEADER
-    ======================================================== */
+       ======================================================== */
 
     .crypto-header {
         display: flex;
         align-items: center;
         gap: 17px;
-
         margin-bottom: 5px;
     }
 
     .crypto-logo {
         width: 62px;
         height: 62px;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         border-radius: 18px;
-
         background: linear-gradient(
             145deg,
             #2563EB,
             #1D4ED8
         );
-
         color: white;
-
         font-size: 29px;
-
         box-shadow:
             0 12px 25px rgba(37,99,235,0.24);
     }
@@ -217,121 +154,77 @@ st.markdown(
     .crypto-title {
         font-size: 2.35rem;
         line-height: 1;
-
-        font-weight: 850;
-
+        font-weight: 800;
         letter-spacing: -1.5px;
-
         color: #172033;
-
         margin: 0;
     }
 
     .crypto-subtitle {
         margin-top: 7px;
-
         color: #64748B;
-
         font-size: 0.92rem;
     }
-
-
-    /* ========================================================
-       BADGE SUPERIOR
-    ======================================================== */
 
     .security-badge {
         display: inline-flex;
         align-items: center;
-
         padding: 6px 10px;
-
         margin-top: 17px;
-
         border-radius: 999px;
-
         background: #E8F0FF;
-
         border: 1px solid #D5E3FF;
-
         color: #2563EB;
-
         font-size: 11px;
         font-weight: 750;
-
         letter-spacing: 0.2px;
     }
 
-
     /* ========================================================
-       TARJETA PRINCIPAL
-    ======================================================== */
+       TARJETAS
+       ======================================================== */
 
     .operation-card {
-        background:
-            rgba(255,255,255,0.90);
-
-        border:
-            1px solid rgba(220,228,239,0.95);
-
+        background: rgba(255,255,255,0.90);
+        border: 1px solid rgba(220,228,239,0.95);
         border-radius: 22px;
-
         padding: 24px 27px;
-
         margin-top: 25px;
-
         box-shadow:
             0 12px 35px rgba(37,55,80,0.07);
-
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
     }
 
     .operation-number {
         display: inline-flex;
-
         align-items: center;
         justify-content: center;
-
         width: 31px;
         height: 31px;
-
         border-radius: 10px;
-
         background: #E8F0FF;
-
         color: #2563EB;
-
         font-size: 12px;
         font-weight: 800;
-
         margin-bottom: 10px;
     }
 
     .operation-title {
         font-size: 1.18rem;
-
         font-weight: 800;
-
         letter-spacing: -0.3px;
-
         color: #172033;
     }
 
     .operation-description {
         margin-top: 5px;
-
         font-size: 0.87rem;
-
         color: #64748B;
-
         line-height: 1.5;
     }
 
-
     /* ========================================================
-       SELECTORES
-    ======================================================== */
+       INPUTS
+       ======================================================== */
 
     div[data-baseweb="select"] > div {
         border-radius: 13px !important;
@@ -345,219 +238,130 @@ st.markdown(
             0 0 0 3px rgba(37,99,235,0.10);
     }
 
-
-    /* ========================================================
-       INPUTS
-    ======================================================== */
-
     div[data-baseweb="input"] {
         border-radius: 13px !important;
         border: 1px solid #DCE4EF !important;
         background: #F8FAFD !important;
-
-        transition:
-            border-color 0.18s ease,
-            box-shadow 0.18s ease;
     }
 
     div[data-baseweb="input"]:focus-within {
         border-color: #2563EB !important;
-
         box-shadow:
             0 0 0 3px rgba(37,99,235,0.10);
     }
 
-
     /* ========================================================
        BOTONES
-    ======================================================== */
+       ======================================================== */
 
     div.stButton > button {
         width: 100%;
-
         min-height: 46px;
-
         border-radius: 13px;
-
         border: 1px solid #DCE4EF;
-
         background: #FFFFFF;
-
         color: #172033;
-
         font-weight: 700;
-
-        transition:
-            transform 0.15s ease,
-            box-shadow 0.15s ease,
-            background 0.15s ease;
     }
 
     div.stButton > button:hover {
-        transform: translateY(-1px);
-
         background: #F8FAFD;
-
         border-color: #BFCDE0;
-
-        box-shadow:
-            0 8px 18px rgba(37,55,80,0.09);
     }
 
     div.stButton > button[kind="primary"] {
-        background:
-            linear-gradient(
-                135deg,
-                #2563EB,
-                #1D4ED8
-            );
-
+        background: linear-gradient(
+            135deg,
+            #2563EB,
+            #1D4ED8
+        );
         color: white;
-
         border: none;
-
         box-shadow:
             0 8px 19px rgba(37,99,235,0.23);
     }
 
     div.stButton > button[kind="primary"]:hover {
-        background:
-            linear-gradient(
-                135deg,
-                #1D4ED8,
-                #1E40AF
-            );
-
-        box-shadow:
-            0 11px 25px rgba(37,99,235,0.29);
+        background: linear-gradient(
+            135deg,
+            #1D4ED8,
+            #1E40AF
+        );
     }
 
-
     /* ========================================================
-       RESULTADO
-    ======================================================== */
+       RESULTADOS
+       ======================================================== */
 
     .result-box {
-        position: relative;
-
-        background:
-            linear-gradient(
-                145deg,
-                #172033,
-                #0F172A
-            );
-
+        background: linear-gradient(
+            145deg,
+            #172033,
+            #0F172A
+        );
         color: #E8EEF7;
-
         border-radius: 17px;
-
         padding: 20px 22px;
-
         margin-top: 18px;
-
-        border:
-            1px solid rgba(255,255,255,0.05);
-
+        border: 1px solid rgba(255,255,255,0.05);
         box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.04),
             0 12px 28px rgba(15,23,42,0.16);
-
         font-family:
             ui-monospace,
             "SF Mono",
             Menlo,
             Consolas,
             monospace;
-
         font-size: 14px;
-
         line-height: 1.65;
-
         white-space: pre-wrap;
-
         overflow-x: auto;
     }
 
-    .result-box::before {
-        content: "RESULTADO";
-
-        display: block;
-
+    .result-label {
         color: #60A5FA;
-
         font-family:
             -apple-system,
             BlinkMacSystemFont,
             "Segoe UI",
             sans-serif;
-
         font-size: 10px;
-
         font-weight: 800;
-
         letter-spacing: 1.6px;
-
         margin-bottom: 9px;
     }
 
-
     /* ========================================================
-       EXPANDER
-    ======================================================== */
+       EXPANDERS Y ALERTAS
+       ======================================================== */
 
     div[data-testid="stExpander"] {
         margin-top: 12px;
-
-        border:
-            1px solid #DCE4EF;
-
+        border: 1px solid #DCE4EF;
         border-radius: 14px;
-
-        background:
-            rgba(255,255,255,0.72);
+        background: rgba(255,255,255,0.72);
     }
-
-
-    /* ========================================================
-       RADIO / MODO
-    ======================================================== */
-
-    div[role="radiogroup"] {
-        gap: 7px;
-    }
-
-
-    /* ========================================================
-       ALERTAS
-    ======================================================== */
 
     div[data-testid="stAlert"] {
         border-radius: 13px;
     }
 
-
     /* ========================================================
        FOOTER
-    ======================================================== */
+       ======================================================== */
 
     .app-footer {
         text-align: center;
-
         margin-top: 45px;
-
         padding-top: 20px;
-
         border-top: 1px solid #DCE4EF;
-
         color: #94A3B8;
-
         font-size: 11px;
     }
 
-
     /* ========================================================
        RESPONSIVE
-    ======================================================== */
+       ======================================================== */
 
     @media (max-width: 768px) {
 
@@ -596,10 +400,7 @@ st.markdown(
 st.sidebar.markdown(
     """
     <div class="sidebar-logo">
-
-        <div class="sidebar-logo-icon">
-            🔐
-        </div>
+        <div class="sidebar-logo-icon">🔐</div>
 
         <div>
             <div class="sidebar-logo-title">
@@ -610,7 +411,6 @@ st.sidebar.markdown(
                 Crypto Laboratory
             </div>
         </div>
-
     </div>
     """,
     unsafe_allow_html=True,
@@ -680,31 +480,39 @@ st.markdown(
 
 
 # ============================================================
-# FUNCIÓN DE RESULTADOS
+# FUNCIONES AUXILIARES
 # ============================================================
 
 def show_result(main_text: str, steps_text: str = ""):
+    """
+    Muestra un resultado principal y opcionalmente
+    una sección con pasos o tablas.
+    """
 
     st.markdown(
-        f'<div class="result-box">{main_text}</div>',
-        unsafe_allow_html=True
+        f"""
+        <div class="result-box">
+            <div class="result-label">
+                RESULTADO
+            </div>
+            {main_text}
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     if steps_text:
-
         with st.expander("Ver pasos / tabla"):
-
             st.code(
                 steps_text,
                 language="text"
             )
 
 
-# ============================================================
-# FUNCIÓN PARA ENCABEZADOS
-# ============================================================
-
 def show_section(number, title, description):
+    """
+    Muestra el encabezado visual de cada sección.
+    """
 
     st.markdown(
         f"""
@@ -728,9 +536,9 @@ def show_section(number, title, description):
     )
 
 
-# ========================================================================
+# ============================================================
 # 1. MATEMÁTICA MODULAR
-# ========================================================================
+# ============================================================
 
 if menu == MENU_1:
 
@@ -751,7 +559,6 @@ if menu == MENU_1:
             "1.6 Inverso multiplicativo (Algoritmo Extendido de Euclides)",
         ],
     )
-
 
     if sub.startswith("1.1"):
 
@@ -785,7 +592,6 @@ if menu == MENU_1:
                 f"{int(a)//int(n)} = {b}"
             )
 
-
     elif sub.startswith("1.2"):
 
         a = st.number_input(
@@ -816,9 +622,8 @@ if menu == MENU_1:
                 f"{int(a)} mod {int(n)} = {inv}",
                 f"({int(a)} + {inv}) mod "
                 f"{int(n)} = "
-                f"{cu.mod(int(a)+inv, int(n))} ✔"
+                f"{cu.mod(int(a) + inv, int(n))} ✔"
             )
-
 
     elif sub.startswith("1.3"):
 
@@ -854,10 +659,9 @@ if menu == MENU_1:
 
                 f"Comprobación: "
                 f"{int(a)} ⊕ {b} = "
-                f"{int(a)^b} "
+                f"{int(a) ^ b} "
                 f"(debe ser {int(c)})"
             )
-
 
     elif sub.startswith("1.4"):
 
@@ -900,7 +704,6 @@ if menu == MENU_1:
 
                 "\n".join(steps)
             )
-
 
     elif sub.startswith("1.5"):
 
@@ -954,7 +757,6 @@ if menu == MENU_1:
                     f"(MCD ≠ 1)",
                     table
                 )
-
 
     elif sub.startswith("1.6"):
 
@@ -1025,9 +827,9 @@ if menu == MENU_1:
                 )
 
 
-# ========================================================================
+# ============================================================
 # 2. CRIPTOGRAFÍA CLÁSICA
-# ========================================================================
+# ============================================================
 
 elif menu == MENU_2:
 
@@ -1049,7 +851,6 @@ elif menu == MENU_2:
             "2.7 Sustitución simple",
         ],
     )
-
 
     if sub.startswith("2.1"):
 
@@ -1091,7 +892,6 @@ elif menu == MENU_2:
                 f"Alfabeto (27): {cu.A27}\n"
                 f"Desplazamiento: k={int(key)}"
             )
-
 
     elif sub.startswith("2.2"):
 
@@ -1138,7 +938,6 @@ elif menu == MENU_2:
                 f"Desplazamiento: k={int(key)}"
             )
 
-
     elif sub.startswith("2.3"):
 
         text = st.text_input(
@@ -1184,7 +983,6 @@ elif menu == MENU_2:
                     "Resultado en hexadecimal."
                 )
 
-
     elif sub.startswith("2.4"):
 
         text = st.text_input(
@@ -1207,7 +1005,6 @@ elif menu == MENU_2:
 
                 "ATBASH: letra_i ↔ letra_(25−i)"
             )
-
 
     elif sub.startswith("2.5"):
 
@@ -1272,7 +1069,6 @@ elif menu == MENU_2:
                     f"Orden de lectura: {order}"
                 )
 
-
     elif sub.startswith("2.6"):
 
         text = st.text_input(
@@ -1336,7 +1132,6 @@ elif menu == MENU_2:
 
                 st.error(str(e))
 
-
     elif sub.startswith("2.7"):
 
         text = st.text_input(
@@ -1380,9 +1175,9 @@ elif menu == MENU_2:
             )
 
 
-# ========================================================================
+# ============================================================
 # 3. CRIPTOGRAFÍA MODERNA
-# ========================================================================
+# ============================================================
 
 elif menu == MENU_3:
 
@@ -1400,7 +1195,6 @@ elif menu == MENU_3:
             "3.3 Algoritmo de exponenciación rápida",
         ],
     )
-
 
     if sub.startswith("3.1"):
 
@@ -1437,13 +1231,11 @@ elif menu == MENU_3:
             type="primary"
         ):
 
-            A, B, sA, sB = (
-                cu.diffie_hellman(
-                    int(p),
-                    int(g),
-                    int(a),
-                    int(b)
-                )
+            A, B, sA, sB = cu.diffie_hellman(
+                int(p),
+                int(g),
+                int(a),
+                int(b)
             )
 
             ok = (
@@ -1474,7 +1266,6 @@ elif menu == MENU_3:
                 f"a={int(a)}, "
                 f"b={int(b)}"
             )
-
 
     elif sub.startswith("3.2"):
 
@@ -1513,13 +1304,11 @@ elif menu == MENU_3:
 
             try:
 
-                n, phi, d, c, back = (
-                    cu.rsa_demo(
-                        int(p),
-                        int(q),
-                        int(e),
-                        int(m)
-                    )
+                n, phi, d, c, back = cu.rsa_demo(
+                    int(p),
+                    int(q),
+                    int(e),
+                    int(m)
                 )
 
                 show_result(
@@ -1543,7 +1332,6 @@ elif menu == MENU_3:
             except ValueError as err:
 
                 st.error(str(err))
-
 
     elif sub.startswith("3.3"):
 
@@ -1572,12 +1360,10 @@ elif menu == MENU_3:
             type="primary"
         ):
 
-            result, binary, rows = (
-                cu.fast_pow_steps(
-                    int(base),
-                    int(exp),
-                    int(m)
-                )
+            result, binary, rows = cu.fast_pow_steps(
+                int(base),
+                int(exp),
+                int(m)
             )
 
             table = (
@@ -1602,9 +1388,9 @@ elif menu == MENU_3:
             )
 
 
-# ========================================================================
-# 4. HASH
-# ========================================================================
+# ============================================================
+# 4. ALGORITMOS HASH
+# ============================================================
 
 elif menu == MENU_4:
 
@@ -1632,9 +1418,7 @@ elif menu == MENU_4:
         "4.1": "MD5",
         "4.2": "SHA256",
         "4.3": "SHA512"
-    }[
-        sub.split()[0]
-    ]
+    }[sub.split()[0]]
 
     if st.button(
         "Generar Hash",
@@ -1647,9 +1431,9 @@ elif menu == MENU_4:
         )
 
 
-# ========================================================================
+# ============================================================
 # 5. CODIFICACIÓN
-# ========================================================================
+# ============================================================
 
 elif menu == MENU_5:
 
@@ -1733,9 +1517,9 @@ elif menu == MENU_5:
             )
 
 
-# ========================================================================
+# ============================================================
 # 6. SALT
-# ========================================================================
+# ============================================================
 
 elif menu == MENU_6:
 
@@ -1758,9 +1542,7 @@ elif menu == MENU_6:
         "6.1": "MD5",
         "6.2": "SHA256",
         "6.3": "SHA512"
-    }[
-        sub.split()[0]
-    ]
+    }[sub.split()[0]]
 
     password = st.text_input(
         "Contraseña",
@@ -1797,9 +1579,9 @@ elif menu == MENU_6:
         )
 
 
-# ========================================================================
+# ============================================================
 # FOOTER
-# ========================================================================
+# ============================================================
 
 st.markdown(
     """
